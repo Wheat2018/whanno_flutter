@@ -1,16 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:transparent_image/transparent_image.dart';
 
 class NetImage extends StatelessWidget{
   const NetImage({
-    Key key,
-    this.url,
+    Key? key,
+    required this.url,
     this.color,
   }): super(key: key);
 
   final String url;
-  final Color color;
+  final Color? color;
   @override
   Widget build(BuildContext context) {
     return Image.network(
@@ -23,11 +22,12 @@ class NetImage extends StatelessWidget{
           child: CircularProgressIndicator(
             valueColor: AlwaysStoppedAnimation(color ?? Theme.of(context).accentColor),
             value: loadingProgress?.expectedTotalBytes != null
-                ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes
+                ? loadingProgress!.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
                 : null,
           ),
         );
       },
+      errorBuilder: (context, obj, errStack) => Icon(Icons.error),
     );
   }
 

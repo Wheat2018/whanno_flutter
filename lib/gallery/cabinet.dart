@@ -11,7 +11,7 @@ extension on double{
 
 class Cabinet extends StatelessWidget{
   const Cabinet({
-    Key key,
+    Key? key,
     this.horizontalCardPadding=0.0,
     this.verticalCardPadding=8.0,
     this.cardMargin=10,
@@ -26,12 +26,12 @@ class Cabinet extends StatelessWidget{
   final double horizontalCardPadding;
   final double verticalCardPadding;
   final double cardMargin;
-  final double elevation;
-  final double highlightElevation;
+  final double? elevation;
+  final double? highlightElevation;
   final EdgeInsets padding;
   final double highlightExpansion;
   final Axis scrollDirection;
-  final ScrollController controller;
+  final ScrollController? controller;
 
   @override
   Widget build(BuildContext context) {
@@ -76,15 +76,15 @@ class Cabinet extends StatelessWidget{
 
 class CabinetCard extends StatelessWidget{
   const CabinetCard({
-    Key key,
+    Key? key,
     this.margin,
     this.width,
     this.height
   }): super(key: key);
 
-  final EdgeInsetsGeometry margin;
-  final double width;
-  final double height;
+  final EdgeInsetsGeometry? margin;
+  final double? width;
+  final double? height;
 
   @override
   Widget build(BuildContext context) {

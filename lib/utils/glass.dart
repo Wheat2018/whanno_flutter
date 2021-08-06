@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 class Glass extends StatelessWidget {
   const Glass({
-    Key key,
+    Key? key,
     this.color = Colors.transparent,
     this.blur = 5.0,
     this.opacity = 0.5,
@@ -13,7 +13,7 @@ class Glass extends StatelessWidget {
   final Color color;
   final double blur;
   final double opacity;
-  final Widget child;
+  final Widget? child;
 
   @override
   Widget build(BuildContext context) {

@@ -3,7 +3,7 @@ import 'package:wheat_flutter/utils/glass.dart';
 
 class MyCard extends StatelessWidget{
   const MyCard({
-    Key key,
+    Key? key,
     this.color,
     this.shadowColor,
     this.padding,
@@ -23,50 +23,52 @@ class MyCard extends StatelessWidget{
   }): super(key: key);
 
   /// 卡片背景颜色
-  final Color color;
+  final Color? color;
   
   /// 阴影颜色，默认为主题阴影颜色
-  final Color shadowColor;
-  final EdgeInsetsGeometry padding;
-  final EdgeInsetsGeometry margin;
-  final BoxBorder border;
+  final Color? shadowColor;
+  final EdgeInsetsGeometry? padding;
+  final EdgeInsetsGeometry? margin;
+  final BoxBorder? border;
   final BoxShape shape;
   final Clip clipBehavior;
   /// 卡片圆角
-  final BorderRadius radius;
+  final BorderRadiusGeometry? radius;
   /// 卡片阴影抬起程度，置空取消阴影
-  final double elevation;
+  final double? elevation;
   /// 卡片阴影模糊程度
-  final double shadowBlur;
+  final double? shadowBlur;
   final bool borderOnForeground;
   /// 毛玻璃模糊程度（仅透明度大于0时生效）
   final double glassBlur;
   /// 毛玻璃透明度（大于0开启毛玻璃）
   final double glassOpacity;
-  final double width;
-  final double height;
-  final Widget child;
+  final double? width;
+  final double? height;
+  final Widget? child;
 
   factory MyCard.cupertino({
-    Widget child,
-    BoxBorder border,
+    Key? key,
+    Widget? child,
+    BoxBorder? border,
     double radius=10,
-    EdgeInsetsGeometry margin=const EdgeInsets.all(10),
+    EdgeInsetsGeometry? margin,
     Clip clipBehavior=Clip.hardEdge,
-    Color color,
+    Color? color,
     double glassBlur=5.0,
     double glassOpacity=0.0,
     double elevation=1.0,
-    double width,
-    double height,
+    double? width,
+    double? height,
   }){
     return MyCard(
+      key: key,
       color: color,
       border: border,
       borderOnForeground: true,
       radius: BorderRadius.all(Radius.circular(radius)),
       clipBehavior: clipBehavior,
-      margin: margin,
+      margin: margin ?? EdgeInsets.all(10),
       child: child,
       glassBlur: glassBlur,
       glassOpacity: glassOpacity,
@@ -100,7 +102,7 @@ class MyCard extends StatelessWidget{
             color: shadowColor ?? Theme.of(context).shadowColor,
             offset: Offset(2.0, 3.0),
             blurRadius: shadowBlur ?? 6.0,
-            spreadRadius: elevation,
+            spreadRadius: elevation!,
           ),
         ],
       ),

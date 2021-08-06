@@ -7,10 +7,10 @@ import 'gallery.dart';
 
 class Display extends StatelessWidget {
   const Display({
-    Key key,
+    Key? key,
     this.margin,
   }) : super(key: key);
-  final EdgeInsetsGeometry margin;
+  final EdgeInsetsGeometry? margin;
 
   @override
   Widget build(BuildContext context) {
