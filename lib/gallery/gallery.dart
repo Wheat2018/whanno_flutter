@@ -30,7 +30,7 @@ class GalleryModel extends ChangeNotifier{
     }
   }
 
-  void at(int index){
+  void setTo(int index){
     if (index >= 0 && index < imageUrls.length){
       this._index = index;
       notifyListeners();

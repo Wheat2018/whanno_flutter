@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wheat_flutter/utils/my_card.dart';
-import 'package:wheat_flutter/utils/net_image.dart';
+import 'package:whanno_flutter/utils/draggableField.dart';
+import 'package:whanno_flutter/utils/my_card.dart';
+import 'package:whanno_flutter/utils/net_image.dart';
 
 import 'gallery.dart';
 
@@ -16,10 +17,26 @@ class Display extends StatelessWidget {
   Widget build(BuildContext context) {
     return MyCard.cupertino(
       margin: margin,
-      child: Center(
-        child: NetImage(url: Provider
-            .of<GalleryModel>(context)
-            .current),
+      child: Consumer<GalleryModel>(
+          builder: (context, gallery, child) => DraggableField(
+            builder: (context, listen){
+              return Stack(
+                alignment: AlignmentDirectional.center,
+                children: [
+                  Container(
+                    color: Color.fromRGBO(0, 0, 0, 0),
+                  ),
+                  listen(
+                    Consumer<GalleryModel>(
+                      builder: (context, gallery, child) => NetImage(
+                        url: gallery.current,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          )
       ),
     );
   }

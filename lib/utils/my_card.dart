@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:wheat_flutter/utils/glass.dart';
+import 'package:whanno_flutter/utils/glass.dart';
 
 class MyCard extends StatelessWidget{
   const MyCard({
