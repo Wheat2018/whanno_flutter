@@ -22,6 +22,8 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   CabinetLayoutStyle layoutStyle = CabinetLayoutStyle.fixed;
+  final Key display = GlobalKey(debugLabel: 'display');
+  final Key cabinet = GlobalKey(debugLabel: 'cabinet');
 
   List<Widget> getChildren(BuildContext context) {
     var button = RaisedButton(
@@ -40,11 +42,13 @@ class _MyAppState extends State<MyApp> {
       case CabinetLayoutStyle.fixed:
         children = <Widget>[
           Expanded(
-            child: const Display(
+            child: Display(
+              key: display,
               margin: EdgeInsets.only(left: 10, right: 10, top: 10),
             ),
           ),
           CabinetCard(
+            key: cabinet,
             height: 150,
             margin: EdgeInsets.all(10),
           ),
@@ -55,12 +59,14 @@ class _MyAppState extends State<MyApp> {
         children = <Widget>[
           Expanded(
             child: Stack(
-              alignment: AlignmentDirectional.center,
+              alignment: AlignmentDirectional.bottomCenter,
               children: [
-                const Display(
+                Display(
+                  key: display,
                   margin: EdgeInsets.all(10),
                 ),
                 CabinetCard(
+                  key: cabinet,
                   height: 150,
                   margin: EdgeInsets.all(20),
                 ),

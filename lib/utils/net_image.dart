@@ -1,19 +1,22 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-class NetImage extends StatelessWidget{
+class NetImage extends StatelessWidget {
   const NetImage({
     Key? key,
     required this.url,
     this.color,
-  }): super(key: key);
+    this.filterQuality = FilterQuality.high,
+  }) : super(key: key);
 
   final String url;
   final Color? color;
+  final FilterQuality filterQuality;
   @override
   Widget build(BuildContext context) {
     return Image.network(
       url,
+      filterQuality: filterQuality,
       loadingBuilder: (context, child, loadingProgress) {
         if (((child as Semantics).child as RawImage).image != null) return child;
         return Center(
@@ -30,5 +33,4 @@ class NetImage extends StatelessWidget{
       errorBuilder: (context, obj, errStack) => Icon(Icons.error),
     );
   }
-
 }

@@ -42,7 +42,7 @@ class Cabinet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var gallery = Provider.of<GalleryModel>(context);
+    var gallery = GalleryModel.of(context);
     var theme = Theme.of(context);
     return ListView.builder(
       clipBehavior: clipBehavior,
@@ -94,7 +94,8 @@ class CabinetCard extends StatelessWidget {
   Widget build(BuildContext context) {
     var controller = ScrollController();
     return MyCard.cupertino(
-      glassOpacity: 0.5,
+      color: Colors.white,
+      glassOpacity: 0.3,
       border: Border.all(color: Theme.of(context).dividerColor),
       height: height,
       width: width,
