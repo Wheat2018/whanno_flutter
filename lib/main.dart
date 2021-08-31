@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:whanno_flutter/gallery/cabinet.dart';
@@ -21,45 +23,36 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  CabinetLayoutStyle layoutStyle = CabinetLayoutStyle.fixed;
+  CabinetLayoutStyle cabinetLayoutStyle = CabinetLayoutStyle.fixed;
   final Key display = GlobalKey(debugLabel: 'display');
   final Key cabinet = GlobalKey(debugLabel: 'cabinet');
 
-  List<Widget> getChildren(BuildContext context) {
-    var button = RaisedButton(
-      onPressed: () {
-        setState(() {
-          layoutStyle =
-              layoutStyle == CabinetLayoutStyle.fixed ? CabinetLayoutStyle.floating : CabinetLayoutStyle.fixed;
-        });
-      },
-      color: Theme.of(context).primaryColor,
-      shape: StadiumBorder(side: BorderSide(color: Colors.black)),
-      child: Text("滚出中国"),
-    );
+  List<Widget> getChildren(BuildContext context, Orientation orientation) {
+    bool vertical = orientation == Orientation.portrait;
     List<Widget> children;
-    switch (layoutStyle) {
+    switch (cabinetLayoutStyle) {
       case CabinetLayoutStyle.fixed:
         children = <Widget>[
           Expanded(
             child: Display(
               key: display,
-              margin: EdgeInsets.only(left: 10, right: 10, top: 10),
+              margin: EdgeInsets.only(left: 10, right: vertical ? 10 : 0, top: 10, bottom: vertical ? 0 : 10),
             ),
           ),
           CabinetCard(
             key: cabinet,
-            height: 150,
+            scrollDirection: vertical ? Axis.horizontal : Axis.vertical,
+            height: vertical ? 150 : null,
+            width: vertical ? null : 150,
             margin: EdgeInsets.all(10),
           ),
-          button,
         ];
         break;
       case CabinetLayoutStyle.floating:
         children = <Widget>[
           Expanded(
             child: Stack(
-              alignment: AlignmentDirectional.bottomCenter,
+              alignment: vertical ? AlignmentDirectional.bottomCenter : AlignmentDirectional.centerEnd,
               children: [
                 Display(
                   key: display,
@@ -67,13 +60,14 @@ class _MyAppState extends State<MyApp> {
                 ),
                 CabinetCard(
                   key: cabinet,
-                  height: 150,
+                  scrollDirection: vertical ? Axis.horizontal : Axis.vertical,
+                  height: vertical ? 150 : null,
+                  width: vertical ? null : 150,
                   margin: EdgeInsets.all(20),
                 ),
               ],
             ),
           ),
-          button,
         ];
         break;
     }
@@ -88,14 +82,24 @@ class _MyAppState extends State<MyApp> {
       routes: {
         '/home': (context) => Scaffold(
               appBar: AppBar(
+                leading: IconButton(
+                    onPressed: () {
+                      setState(() {
+                        cabinetLayoutStyle = cabinetLayoutStyle == CabinetLayoutStyle.fixed
+                            ? CabinetLayoutStyle.floating
+                            : CabinetLayoutStyle.fixed;
+                      });
+                    },
+                    icon: Icon(Icons.transform)),
                 title: Text('wheat home'),
               ),
-              body: Builder(
-                builder: (context) {
+              body: OrientationBuilder(
+                builder: (context, orientation) {
                   return Center(
-                    child: Column(
+                    child: Flex(
+                      direction: orientation == Orientation.portrait ? Axis.vertical : Axis.horizontal,
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: getChildren(context),
+                      children: getChildren(context, orientation),
                     ),
                   );
                 },

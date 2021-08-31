@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:whanno_flutter/gallery/gallery.dart';
 import 'package:whanno_flutter/utils/my_card.dart';
 import 'package:whanno_flutter/utils/net_image.dart';
@@ -84,11 +83,13 @@ class Cabinet extends StatelessWidget {
 }
 
 class CabinetCard extends StatelessWidget {
-  const CabinetCard({Key? key, this.margin, this.width, this.height}) : super(key: key);
+  const CabinetCard({Key? key, this.margin, this.width, this.height, this.scrollDirection = Axis.vertical})
+      : super(key: key);
 
   final EdgeInsetsGeometry? margin;
   final double? width;
   final double? height;
+  final Axis scrollDirection;
 
   @override
   Widget build(BuildContext context) {
@@ -104,7 +105,7 @@ class CabinetCard extends StatelessWidget {
         controller: controller,
         child: Cabinet(
           controller: controller,
-          scrollDirection: Axis.horizontal,
+          scrollDirection: scrollDirection,
         ),
       ),
     );
