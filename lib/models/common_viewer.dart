@@ -5,11 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:whanno_flutter/models/viewer.dart';
 
 FutureOr<T?> _onUrl<T>(String uri,
-    {FutureOr<T?> Function(String file)? onFile,
+    {FutureOr<T?> Function(String path)? onPath,
     FutureOr<T?> Function(String url)? onUrl,
     void Function(Object e, StackTrace stack)? onErorr}) async {
   try {
-    return await (uri.startsWith("file://") ? onFile?.call(uri.replaceFirst("file://", "")) : onUrl?.call(uri));
+    return await (uri.startsWith("file://") ? onPath?.call(uri.replaceFirst("file://", "")) : onUrl?.call(uri));
   } catch (e, stack) {
     onErorr?.call(e, stack);
   }
@@ -20,10 +20,9 @@ class TextViewer extends CacheViewer<String> {
   TextViewer(this.uri);
 
   @override
-  FutureOr set(String? data) async {
-    if (data == null) return;
-    await _onUrl(uri, onFile: (file) async {
-      return await File(file).writeAsString(data);
+  FutureOr performSet(String data) async {
+    await _onUrl(uri, onPath: (path) async {
+      return await File(path).writeAsString(data);
     }, onUrl: (url) async {
       // TODO: 网络txt写入。
       throw UnimplementedError;
@@ -31,9 +30,9 @@ class TextViewer extends CacheViewer<String> {
   }
 
   @override
-  FutureOr<String?> grab() async {
-    return await _onUrl(uri, onFile: (file) async {
-      return await File(file).readAsString();
+  FutureOr<String?> performGet() async {
+    return await _onUrl(uri, onPath: (path) async {
+      return await File(path).readAsString();
     }, onUrl: (url) async {
       // TODO: 网络txt读取。
       throw UnimplementedError;
@@ -46,8 +45,8 @@ class ImageGetter extends CacheGetter<ImageProvider> {
   ImageGetter(this.uri);
 
   @override
-  FutureOr<ImageProvider<Object>?> grab() {
-    return _onUrl(uri, onFile: (file) => AssetImage(file), onUrl: (url) => NetworkImage(url));
+  FutureOr<ImageProvider<Object>?> performGet() {
+    return _onUrl(uri, onPath: (path) => AssetImage(path), onUrl: (url) => NetworkImage(url));
   }
 }
 
@@ -56,9 +55,9 @@ class FileListGetter extends CacheGetter<List<String>> {
   FileListGetter(this.uri);
 
   @override
-  FutureOr<List<String>?> grab() async {
-    return await _onUrl(uri, onFile: (file) async {
-      return Directory(file).list().map((event) => event.path).toList();
+  FutureOr<List<String>?> performGet() async {
+    return await _onUrl(uri, onPath: (path) async {
+      return Directory(path).list().map((event) => event.path).toList();
     }, onUrl: (url) async {
       // TODO: 网络文件列表读取。
       throw UnimplementedError;

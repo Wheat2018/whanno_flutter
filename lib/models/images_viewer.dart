@@ -9,7 +9,7 @@ class ImagesGetter extends CacheGetter<Iterable<Getter<ImageProvider>>> {
   ImagesGetter(this.files);
 
   @override
-  FutureOr<Iterable<Getter<ImageProvider>>?> grab() async {
+  FutureOr<Iterable<Getter<ImageProvider>>?> performGet() async {
     return (await files.get())?.map((uri) => ImageGetter(uri)..owner = this);
   }
 }

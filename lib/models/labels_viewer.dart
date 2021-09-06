@@ -10,12 +10,12 @@ class SingleUriLabelTextViewer extends CacheViewer<List<Viewer<String>>> {
   final TextViewer text;
 
   @override
-  FutureOr set(List<Viewer<String>>? data) {
+  FutureOr performSet(List<Viewer<String>>? data) {
     if (data != null && data != cache) cache = data;
   }
 
   @override
-  FutureOr<List<Viewer<String>>?> grab() {
+  FutureOr<List<Viewer<String>>?> performGet() {
     // TODO: implement grab
     throw UnimplementedError();
   }
