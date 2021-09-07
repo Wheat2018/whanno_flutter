@@ -1,22 +1,27 @@
-import 'dart:async';
-
-import 'package:whanno_flutter/models/common_viewer.dart';
+import 'package:whanno_flutter/models/dispatcher.dart';
 import 'package:whanno_flutter/models/viewer.dart';
 
-class SingleUriLabelTextViewer extends CacheViewer<List<Viewer<String>>> {
-  String uri;
-  SingleUriLabelTextViewer(this.uri) : text = TextViewer(uri);
-
-  final TextViewer text;
+class SingleTextLabelsViewer extends StringDispatcher {
+  SingleTextLabelsViewer({required Viewer<String> source, required RegExp? seg})
+      : super(source: source, separator: source.get().on(notNull: (str) => seg?.allMatches(str).map((e) => e.start)));
 
   @override
-  FutureOr performSet(List<Viewer<String>>? data) {
-    if (data != null && data != cache) cache = data;
-  }
+  List<TokenViewer<String>>? get() => super.get()?.sublist(1);
+}
 
-  @override
-  FutureOr<List<Viewer<String>>?> performGet() {
-    // TODO: implement grab
-    throw UnimplementedError();
-  }
+void singleTextLablesViewerTest() {
+  var str = """
+00001.jpg 2
+1 2 3 4 5
+5 4 3 2 1
+00002.jpg 1
+2 1 3 5 6
+00003.jpg 0
+00004.jpg 3
+1.2 5.6 3 2 3
+1 2 3 5 6
+2 3 4 6 2
+""";
+  var value = ValueViewer(str);
+  var labels = SingleTextLabelsViewer(source: value, seg: RegExp(r"\d+.jpg"));
 }

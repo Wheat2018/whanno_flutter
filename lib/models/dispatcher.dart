@@ -1,16 +1,14 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:whanno_flutter/models/viewer.dart';
 
 /// 令牌约束。
 abstract class Tokenize {
-  FutureOr<int> get token;
+  int get token;
 }
 
 /// 带令牌的观察器约束。观察器的令牌在构造时生成，每次`get`和`set`操作会检验`owner`的令牌。
 abstract class TokenViewer<T> with Getter<T>, Setter<T>, Viewer<T> implements Tokenize {
-  final FutureOr<int> token;
+  final int token;
   TokenViewer({required Tokenize owner, int? token}) : token = token ?? owner.token {
     super.owner = owner;
   }
@@ -19,9 +17,9 @@ abstract class TokenViewer<T> with Getter<T>, Setter<T>, Viewer<T> implements To
   late Function? onArrest = () => throw Exception("TokenViewer: token block! $token != ${owner.token}");
 
   @override
-  FutureOr<T?> get() async => await token == await owner.token ? super.get() : onArrest?.call();
+  T? get() => token == owner.token ? super.get() : onArrest?.call();
   @override
-  FutureOr set(data) async => await token == await owner.token ? super.set(data) : onArrest?.call();
+  void set(data) => token == owner.token ? super.set(data) : onArrest?.call();
 }
 
 /// 描述由[Source]类型实例构造[Granule]类型颗粒的分发器的约束。
@@ -50,10 +48,10 @@ abstract class Dispatcher<Source, Granule> extends CacheGetter<Iterable<Viewer<G
 
   /// 生成回写数据。该方法应该是protected的，外部应调用`flash()`而不是`rebuildSource()`。
   @protected
-  FutureOr<Source?> rebuildSource();
+  Source? rebuildSource();
 
   /// 将颗粒影响的源数据映像立即写回源数据。一次分发可多次回写。
-  FutureOr flash() async => source.set(await rebuildSource());
+  void flash() => source.set(rebuildSource());
 }
 
 /// 带令牌的分发器约束。相比于[Dispatcher]增加了令牌机制，分发器可以随时重签令牌，以使得之前分发出去的颗粒立即失效。
@@ -63,10 +61,10 @@ abstract class TokenDispatcher<Source, Granule> extends Dispatcher<Source, Granu
   TokenDispatcher({required Viewer<Source> source}) : super(source: source);
 
   @override
-  FutureOr<Iterable<TokenViewer<Granule>>?> get() => super.get() as dynamic; // 强制绕过静态类型检查。
+  Iterable<TokenViewer<Granule>>? get() => super.get() as dynamic; // 强制绕过静态类型检查。
 
   @override
-  FutureOr<Iterable<TokenViewer<Granule>>?> performGet();
+  Iterable<TokenViewer<Granule>>? performGet();
 }
 
 // ----impl----
@@ -77,10 +75,10 @@ class _IndexViewer<E> extends TokenViewer<E> {
   _IndexViewer(this.list, this.index, {required Tokenize owner, int? token}) : super(owner: owner, token: token);
 
   @override
-  FutureOr<E?> performGet() => list[index];
+  E? performGet() => list[index];
 
   @override
-  FutureOr performSet(E data) => list[index] = data;
+  void performSet(E data) => list[index] = data;
 }
 
 /// 列表分发器。将列表元素逐个分发。一般而言，对颗粒的读写是直接作用在原列表元素上的，因此不需要调用`falsh`回写。
@@ -90,32 +88,34 @@ class ListDispatcher<E> extends TokenDispatcher<List<E>, E> {
   int _token = 0;
 
   @override
-  FutureOr<int> get token => _token;
+  int get token => _token;
 
   @override
-  FutureOr<List<TokenViewer<E>>?> get() => super.get() as dynamic; // 强制绕过静态类型检查。
+  List<TokenViewer<E>>? get() => super.get() as dynamic; // 强制绕过静态类型检查。
 
   @override
-  FutureOr<List<TokenViewer<E>>?> performGet() async {
-    var list = await source.get(); // 映像
+  List<TokenViewer<E>>? performGet() {
+    var list = source.get(); // 映像
     if (list == null) return null;
     _token = list.hashCode + list.length;
     return List.generate(list.length, (index) => _IndexViewer(list, index, owner: this));
   }
 
   @override
-  FutureOr<List<E>?> rebuildSource() => source.get();
+  List<E>? rebuildSource() => source.get();
 }
 
 extension on String {
-  Iterable<String> separate(Iterable<int> separator) sync* {
+  Iterable<String> separate(Iterable<int>? separator) sync* {
     int start = 0;
-    for (var sep in separator) {
-      if (sep < start)
-        yield "";
-      else {
-        yield substring(start, sep);
-        start = sep;
+    if (separator != null) {
+      for (var sep in separator) {
+        if (sep < start)
+          yield "";
+        else {
+          yield substring(start, sep);
+          start = sep;
+        }
       }
     }
     yield substring(start);
@@ -129,22 +129,22 @@ extension on String {
 }
 
 class StringDispatcher extends TokenDispatcher<String, String> {
-  Iterable<int> separator;
+  Iterable<int>? separator;
   StringDispatcher({required Viewer<String> source, required this.separator}) : super(source: source);
 
   int _token = 0;
 
   @override
-  FutureOr<int> get token => _token;
+  int get token => _token;
 
   List<String> _strImage = []; // 映像
 
   @override
-  FutureOr<List<TokenViewer<String>>?> get() => super.get() as dynamic;
+  List<TokenViewer<String>>? get() => super.get() as dynamic;
 
   @override
-  FutureOr<List<TokenViewer<String>>?> performGet() async {
-    var str = await source.get();
+  List<TokenViewer<String>>? performGet() {
+    var str = source.get();
     if (str == null) return null;
     _token = separator.hashCode + str.hashCode;
     _strImage = List.from(str.separate(separator));
@@ -152,5 +152,5 @@ class StringDispatcher extends TokenDispatcher<String, String> {
   }
 
   @override
-  FutureOr<String?> rebuildSource() => "".join(_strImage);
+  String? rebuildSource() => "".join(_strImage);
 }

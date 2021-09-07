@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:whanno_flutter/models/common_viewer.dart';
 import 'package:whanno_flutter/models/viewer.dart';
@@ -9,12 +7,12 @@ class ImagesGetter extends CacheGetter<Iterable<Getter<ImageProvider>>> {
   ImagesGetter(this.files);
 
   @override
-  FutureOr<Iterable<Getter<ImageProvider>>?> performGet() async {
-    return (await files.get())?.map((uri) => ImageGetter(uri)..owner = this);
+  Iterable<Getter<ImageProvider>>? performGet() {
+    return files.get()?.map((uri) => ImageGetter(uri)..owner = this);
   }
 }
 
-void func() {
+void imagesGetterTest() {
   var images = ImagesGetter(SimpleViewer(
       getter: () => [
             "https://i.loli.net/2021/01/02/h1nSoTMjuYW8DN6.gif",
