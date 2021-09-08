@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
-extension NotNull<T> on T? {
-  dynamic on({Function(T)? notNull, Function()? justNull}) => this == null ? justNull?.call() : notNull?.call(this!);
-}
+import 'package:whanno_flutter/utils/extension_utils.dart';
 
 /// 描述可从[Getter\<T\>]实例中获取[T]类型实例的约束。
 abstract class Getter<T> {
@@ -14,6 +12,9 @@ abstract class Getter<T> {
   /// 数据实际抓取方式。该方法是protected的，外部应调用`get()`而不是`grab()`。
   @protected
   T? performGet();
+
+  @override
+  String toString() => "$runtimeType{${get()}}";
 }
 
 /// 描述可将[T]类型实例写入[Setter\<T\>]实例的约束。
