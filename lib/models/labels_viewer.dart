@@ -2,37 +2,78 @@ import 'package:whanno_flutter/models/dispatcher.dart';
 import 'package:whanno_flutter/models/viewer.dart';
 import 'package:whanno_flutter/utils/extension_utils.dart';
 
-/// [LabelsTextDispatcher]是一种字符串分发器的分发器的分发器。🐶
-class LabelsTextDispatcher extends TokenDispatcher<ListDispatcher<StringDispatcher>> implements SourceManager<String> {
-  final Viewer<String> source;
-  final Pattern imagePattern, instancePattern, elementPattern;
-  LabelsTextDispatcher(
-      {required this.source, required this.imagePattern, required this.instancePattern, required this.elementPattern});
+class CascadeStringDispatcher<Dst extends Dispatcher> extends CascadeDispatcher<Dst, String> {
+  final Viewer<StringDispatcher> source;
+  CascadeStringDispatcher({required this.source, required Dst Function(Viewer<String> source) builder})
+      : super(source: source, builder: builder);
 
-  StringDispatcher? allImages;
-  Map<StringDispatcher, List<StringDispatcher>>? allInstancesElements;
+  String? get str => source.get()?.source.get();
+
+  ListDispatcher<String>? _appendDispatcher;
 
   @override
-  List<TokenViewer<ListDispatcher<StringDispatcher>>>? performGet() {
-    allImages = StringDispatcher(source: source, pattern: imagePattern);
-    var eachImages = allImages!.get();
-    if (eachImages == null) return null;
-    allInstancesElements = Map.fromEntries(eachImages.map((e) {
-      var key = e.dispatcher(instancePattern)..owner = allImages;
-      var value = key.get()?.map((e) => e.dispatcher(elementPattern)..owner = key).toList();
-      return value == null ? null : MapEntry(key, value);
-    }).skipNull());
-    var allElements = allInstancesElements?.entries.map((e) => e.value.dispatcher()..owner = e.key).toList();
-    var allInstances = allElements?.dispatcher()?..owner = allImages;
-    return allInstances?.get();
+  List<TokenViewer<Dst>>? performGet() {
+    _appendDispatcher = <String>[].dispatcher();
+    return super.performGet();
   }
 
   @override
-  String? rebuildSource() {
-    allInstancesElements?.values.forEach((list) => list.forEach((e) => e.flash()));
-    allInstancesElements?.keys.forEach((e) => e.flash());
-    allImages?.flash();
+  Dispatcher<String>? rebuildSource() {
+    get()?.getRange(length - appendCount, length).forEach((e) => e.get()?.flash());
+    _appendDispatcher?.source.get().on(notNull: (v) => source.get()?.tail = "".join(v));
+    source.get()?.flash();
+    return super.rebuildSource();
   }
+
+  int get appendCount => _appendDispatcher?.length ?? 0;
+
+  TokenViewer<Dst>? append({required String init}) {
+    var out = get(), viewer = _appendDispatcher?.append(init);
+    if (viewer == null || out == null) return null;
+    var disp = builder(viewer)..owner = this;
+    var granule = SimpleTokenViewer(owner: this, getter: () => disp);
+    out.add(granule);
+    return granule;
+  }
+
+  bool removeAppend(Object element, [int start = 0]) {
+    int idx = -1;
+    if (element is TokenViewer<Dst>) {
+      idx = get()?.indexOf(element, start) ?? -1;
+      if (idx < (length - appendCount)) idx = -1;
+    } else if (element is Dst) {
+      idx = _appendDispatcher?.indexOf(element.source, start) ?? -1;
+    }
+    if (idx >= 0) {
+      get()?.removeAt(idx);
+      _appendDispatcher?.remove(idx);
+      return true;
+    }
+    return false;
+  }
+}
+
+class ImageLabelDispatcher extends CascadeStringDispatcher<StringDispatcher> {
+  final Viewer<String> imageLabel;
+  final Pattern instancePattern;
+  final Pattern elementPattern;
+  ImageLabelDispatcher({required this.imageLabel, required this.elementPattern, required this.instancePattern})
+      : super(
+            source: ValueViewer(imageLabel.dispatcher(instancePattern)), builder: (v) => v.dispatcher(elementPattern));
+}
+
+class LabelDispatcher extends CascadeStringDispatcher<ImageLabelDispatcher> {
+  final Viewer<String> label;
+  final Pattern imagePattern;
+  final Pattern instancePattern;
+  final Pattern elementPattern;
+
+  LabelDispatcher(
+      {required this.label, required this.imagePattern, required this.instancePattern, required this.elementPattern})
+      : super(
+            source: ValueViewer(label.dispatcher(imagePattern)),
+            builder: (v) =>
+                ImageLabelDispatcher(imageLabel: v, elementPattern: elementPattern, instancePattern: instancePattern));
 }
 
 void singleLablesTextViewerTest() {
@@ -78,8 +119,8 @@ void singleLablesTextViewerTest() {
   // ⬆️⬇️两种写法等效。
   {
     var labelsTxt = ValueViewer(str);
-    var dispatcher = LabelsTextDispatcher(
-        source: labelsTxt,
+    var dispatcher = LabelDispatcher(
+        label: labelsTxt,
         imagePattern: RegExp(r"\w+.jpg[^]*?((?=\w+.jpg)|$)"),
         instancePattern: RegExp(r"\n.+"),
         elementPattern: RegExp(r"\S+"));
@@ -96,6 +137,19 @@ void singleLablesTextViewerTest() {
     allElements?[3] = "2021";
     dispatcher.flash();
     print(labelsTxt.get());
-    print(dispatcher[0]?.owner.source.get());
+    print(dispatcher[0]?.str);
   }
+  print("========追加标注示例========");
+  var viewer = ValueViewer(str);
+  var dispatcher = LabelDispatcher(
+      label: viewer,
+      imagePattern: RegExp(r"\w+.jpg[^]*?((?=\w+.jpg)|$)"),
+      instancePattern: RegExp(r"\n.+"),
+      elementPattern: RegExp(r"\S+"));
+  var image = dispatcher.append(init: "00005.jpg 10\n")?.get();
+  image?.append(init: "0 1.0 3.0 4.0 5\n");
+  var instance = image?.append(init: "20 10 30 40 8\n")?.get();
+  instance?[1] = "2022";
+  dispatcher.flash();
+  print(dispatcher.str);
 }

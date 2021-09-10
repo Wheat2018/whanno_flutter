@@ -62,7 +62,7 @@ abstract class CacheViewer<T> extends CacheGetter<T> with Setter<T>, Viewer<T> {
 
 class SimpleViewer<T> with Getter<T>, Setter<T>, Viewer<T> {
   final T? Function()? getter;
-  final void Function(T? data)? setter;
+  final void Function(T data)? setter;
   SimpleViewer({this.getter, this.setter});
 
   @override
