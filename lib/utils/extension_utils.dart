@@ -21,6 +21,7 @@ extension StringUtils on String {
   }
 
   String join(Iterable<String> strings) {
+    if (strings.isEmpty) return this;
     var buffer = StringBuffer(this);
     strings.forEach(buffer.write);
     return buffer.toString();
