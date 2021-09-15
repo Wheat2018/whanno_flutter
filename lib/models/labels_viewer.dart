@@ -7,7 +7,7 @@ class CascadeStringDispatcher<Dst extends Dispatcher> extends CascadeDispatcher<
   CascadeStringDispatcher({required this.source, required Dst Function(Viewer<String> source) builder})
       : super(source: source, builder: builder);
 
-  String? get str => source.get()?.source.get();
+  String? get str => source.get()?.str;
 
   ListDispatcher<String>? _appendDispatcher;
 
@@ -39,8 +39,7 @@ class CascadeStringDispatcher<Dst extends Dispatcher> extends CascadeDispatcher<
   bool removeAppend(Object element, [int start = 0]) {
     int idx = -1;
     if (element is TokenViewer<Dst>) {
-      idx = get()?.indexOf(element, start) ?? -1;
-      if (idx < (length - appendCount)) idx = -1;
+      idx = get()?.indexOf(element, start + length - appendCount) ?? -1;
     } else if (element is Dst) {
       idx = _appendDispatcher?.indexOf(element.source, start) ?? -1;
     }
