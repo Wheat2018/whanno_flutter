@@ -260,6 +260,16 @@ class ExpandDispatcher<Granule> extends TokenDispatcher<Granule>
 
   @override
   List<TokenDispatcher<Granule>>? rebuildSource() => source.get()?..forEach((e) => e.flash());
+
+  ExpandDispatcher<Granule> operator +(TokenDispatcher<Granule> other) {
+    if (other is ExpandDispatcher<Granule>)
+      return ExpandDispatcher.fromList((source.get() ?? []) + (other.source.get() ?? []));
+    return ExpandDispatcher.fromList((source.get() ?? []) + [other]);
+  }
+}
+
+extension ToExpandDispatcher<Granule> on TokenDispatcher<Granule> {
+  ExpandDispatcher<Granule> operator +(TokenDispatcher<Granule> other) => ExpandDispatcher.fromList([this, other]);
 }
 
 class CascadeDispatcher<Dst extends Dispatcher, SrcGranule> extends TokenDispatcher<Dst>
