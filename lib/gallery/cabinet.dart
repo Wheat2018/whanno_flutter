@@ -52,7 +52,7 @@ class Cabinet extends StatelessWidget {
       itemBuilder: (context, index) {
         bool highlight = index == gallery.index;
         return GestureDetector(
-          onTap: () => gallery.setTo(index),
+          onTap: () => gallery.select(index),
           child: MyCard(
             clipBehavior: Clip.antiAlias,
             color: highlight ? theme.primaryColorLight : theme.primaryColor,

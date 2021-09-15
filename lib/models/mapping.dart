@@ -1,39 +1,43 @@
 import 'package:whanno_flutter/models/common_viewer.dart';
-import 'package:whanno_flutter/models/dispatcher.dart';
+import 'package:whanno_flutter/models/labels_viewer.dart';
 
-class LabelImage {
+class SignedImage {
   final String key;
-  LabelImage(this.key);
+  SignedImage(this.key);
   final List<ImageGetter> images = [];
-  final List<Dispatcher<StringDispatcher>> labels = [];
-  void pushImage(ImageGetter image) => images.add(image);
-  void pushLabel(Dispatcher<StringDispatcher> label) => labels.add(label);
+  final List<ImageLabelDispatcher> labels = [];
+  void putImage(ImageGetter image) => images.add(image);
+  void putLabel(ImageLabelDispatcher label) => labels.add(label);
 
-  ImageGetter get image => images[0];
-  Dispatcher<StringDispatcher> get label => labels[0];
+  ImageGetter? get image => valid ? images.single : null;
+  ImageLabelDispatcher? get label => valid ? labels.single : null;
+  String? get labelUri => label?.uri;
 
   bool get valid => images.length == 1 && labels.length == 1;
+
+  @override
+  String toString() => super.toString() + "{${valid ? "valid" : "invalid"}, $image, $label}";
 }
 
-typedef StringMapping = String Function(String);
+String matchFilename(String path) => RegExp(r"(.*[\\/])*([^.]+).*").firstMatch(path)?.group(2) ?? "";
 
-String defaultStringMapping(String value) => value;
-
-Map<String, LabelImage> mapping(
+Map<String, SignedImage> mapping(
     {required Iterable<ImageGetter> images,
-    required Iterable<Dispatcher<StringDispatcher>> labels,
-    StringMapping imageKey = defaultStringMapping,
-    StringMapping labelKey = defaultStringMapping}) {
-  Map<String, LabelImage> map = {};
+    required Iterable<ImageLabelDispatcher> labels,
+    String Function(String uri)? imageKey,
+    String Function(String uri, String content)? labelKey}) {
+  imageKey = imageKey ?? matchFilename;
+  labelKey = labelKey ?? (uri, content) => uri.isNotEmpty ? matchFilename(uri) : content;
+  Map<String, SignedImage> map = {};
   for (var image in images) {
     var key = imageKey(image.uri);
-    map.putIfAbsent(key, () => LabelImage(key)).pushImage(image);
+    map.putIfAbsent(key, () => SignedImage(key)).putImage(image);
   }
   for (var label in labels) {
-    String? text = label.owner.get();
+    String? text = label.str;
     if (text == null) continue;
-    String key = labelKey(text);
-    map.putIfAbsent(key, () => LabelImage(key)).pushLabel(label);
+    String key = labelKey(label.uri ?? "", text);
+    map.putIfAbsent(key, () => SignedImage(key)).putLabel(label);
   }
   return map;
 }

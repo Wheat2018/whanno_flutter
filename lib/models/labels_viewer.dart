@@ -1,3 +1,4 @@
+import 'package:whanno_flutter/models/common_viewer.dart';
 import 'package:whanno_flutter/models/dispatcher.dart';
 import 'package:whanno_flutter/models/viewer.dart';
 import 'package:whanno_flutter/utils/extension_utils.dart';
@@ -59,6 +60,9 @@ class ImageLabelDispatcher extends CascadeStringDispatcher<StringDispatcher> {
   ImageLabelDispatcher({required this.imageLabel, required this.elementPattern, required this.instancePattern})
       : super(
             source: ValueViewer(imageLabel.dispatcher(instancePattern)), builder: (v) => v.dispatcher(elementPattern));
+
+  /// 所属标注文件（若有）的uri。
+  String? get uri => owner.label is TextViewer ? owner.label.uri : null;
 }
 
 class LabelDispatcher extends CascadeStringDispatcher<ImageLabelDispatcher> {
@@ -75,7 +79,7 @@ class LabelDispatcher extends CascadeStringDispatcher<ImageLabelDispatcher> {
                 ImageLabelDispatcher(imageLabel: v, elementPattern: elementPattern, instancePattern: instancePattern));
 }
 
-void singleLablesTextViewerTest() {
+LabelDispatcher singleLablesTextViewerTest() {
   var str = """
 00001.jpg 2
 1 2 3 4 5
@@ -151,4 +155,10 @@ void singleLablesTextViewerTest() {
   instance?[1] = "2022";
   dispatcher.flash();
   print(dispatcher.str);
+
+  return LabelDispatcher(
+      label: TextViewer("file://e:\\labels\\label.txt")..set(str),
+      imagePattern: RegExp(r"\w+.jpg[^]*?((?=\w+.jpg)|$)"),
+      instancePattern: RegExp(r"\n.+"),
+      elementPattern: RegExp(r"\S+"));
 }
