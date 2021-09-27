@@ -1,108 +1,153 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-
-class DeltaValue<T extends num> {
-  late T _data;
-  final T? min, max;
-  DeltaValue(T data, {this.min, this.max}) {
-    _data = data;
-    _prev = data;
-  }
-  T get current => _data;
-  set _current(T value) {
-    _prev = current;
-    if (min != null && value < min!) value = min!;
-    if (max != null && value > max!) value = max!;
-    _data = value;
-  }
-
-  late T _pinned;
-  late T _origin;
-  late T _prev;
-  T get prev => _prev;
-  void start(T origin) {
-    _pinned = current;
-    _origin = origin;
-  }
-
-  T delta(T now) => _current = (_pinned + now - _origin) as T;
-
-  T times(T now) => _current = (_pinned * (now - _origin)) as T;
-}
+import 'package:provider/provider.dart';
 
 class DraggableField extends StatefulWidget {
   ///第二个参数为监听控件
-  final Widget Function(BuildContext, Widget Function(Widget)) builder;
+  final Widget Function(BuildContext context, Widget Function(Widget) apply) builder;
 
   final Alignment alignment;
 
-  const DraggableField({Key? key, required this.builder, this.alignment = Alignment.center}) : super(key: key);
+  DraggableField({Key? key, required this.builder, this.alignment = Alignment.center, ScaleController? controller})
+      : controller = controller ?? ScaleController(),
+        super(key: key);
+
+  final ScaleController controller;
 
   @override
-  State<StatefulWidget> createState() => _DraggableFieldState();
+  _DraggableFieldState createState() => _DraggableFieldState();
 }
 
 class _DraggableFieldState extends State<DraggableField> {
-  var nomralizedOffset = Offset.zero;
-  var scale = DeltaValue(1.0, min: 0.1);
-  Offset offset = Offset.zero;
+  final _ScaleValue value = _ScaleValue();
+  @override
+  void initState() {
+    widget.controller.attach(value);
+    super.initState();
+  }
 
-  Widget dragListener(Widget child) {
-    return CustomSingleChildLayout(
-      delegate: _DraggableFieldRelayout(offset: offset, scale: scale.current, alignment: widget.alignment),
-      child: Transform.scale(
-        scale: scale.current,
-        child: child,
-        alignment: Alignment.topLeft,
-      ),
+  Widget _dragListener(Widget child) {
+    return Consumer<_ScaleValue>(
+      builder: (context, controller, child) {
+        return Transform.translate(
+            offset: controller.inherent + controller.offset,
+            child: Transform.scale(
+              scale: controller.scale,
+              child: child,
+              alignment: Alignment.topLeft,
+            ));
+      },
+      child: child,
     );
   }
 
   @override
-  void initState() {
-    super.initState();
+  void didUpdateWidget(covariant DraggableField oldWidget) {
+    if (widget.controller != oldWidget.controller) {
+      oldWidget.controller.detach();
+      widget.controller.attach(value);
+    }
+    super.didUpdateWidget(oldWidget);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: GestureDetector(
-        onScaleStart: (details) {
-          var down = details.localFocalPoint;
-          nomralizedOffset = (down - offset) / scale.current;
-          scale.start(0);
+    var down = Offset.zero;
+    var downOffset = Offset.zero;
+    var downScale = 1.0;
+    var normal = Offset.zero;
+    return ChangeNotifierProvider(
+      create: (_) => value,
+      child: Listener(
+        onPointerSignal: (e) {
+          if (e is PointerScrollEvent) {
+            var oldScale = value.scale;
+            var normal = value.convert(e.localPosition);
+            var wheelScale = -e.scrollDelta.dy.clamp(-50, 50) / 50;
+            value.scale *= 1 + wheelScale;
+            value.offset += normal * (oldScale - value.scale);
+          }
         },
-        onScaleUpdate: (details) {
-          setState(() {
-            scale.times(details.scale);
-            offset = details.localFocalPoint - nomralizedOffset * scale.current;
-          });
-        },
-        child: widget.builder(context, dragListener),
+        child: GestureDetector(
+          onScaleStart: (details) {
+            downOffset = value.offset;
+            down = details.localFocalPoint;
+            normal = value.convert(down);
+            downScale = value.scale;
+          },
+          onScaleUpdate: (details) {
+            value.scale = downScale * details.scale;
+            value.offset = downOffset + details.localFocalPoint - down + normal * (downScale - value.scale);
+          },
+          child: Container(
+              width: double.infinity,
+              height: double.infinity,
+              color: Colors.transparent,
+              child: widget.builder(context, _dragListener)),
+        ),
       ),
     );
   }
 }
 
-class _DraggableFieldRelayout extends SingleChildLayoutDelegate {
-  const _DraggableFieldRelayout({this.offset = Offset.zero, this.scale = 1.0, this.alignment = Alignment.topLeft});
-
-  final Offset offset;
-
-  /// 监听对象的缩放比例，仅用于计算对齐偏移。
-  final double scale;
-
-  /// 监听对象对齐方式
-  final Alignment alignment;
-
-  @override
-  bool shouldRelayout(covariant _DraggableFieldRelayout oldDelegate) {
-    return offset != oldDelegate.offset;
+class _ScaleValue extends ChangeNotifier {
+  Offset _offset = Offset.zero;
+  Offset get offset => _offset;
+  set offset(Offset value) {
+    if (value != _offset) {
+      _offset = value;
+      notifyListeners();
+    }
   }
 
-  @override
-  Offset getPositionForChild(Size size, Size childSize) {
-    final Offset alignmentOffset = Offset((size.width - childSize.width) * (alignment.x + 1) / 2,
-        (size.height - childSize.height) * (alignment.y + 1) / 2);
-    return offset + alignmentOffset * scale;
+  Offset _inherent = Offset.zero;
+  Offset get inherent => _inherent;
+  set inherent(Offset value) {
+    if (value != _inherent) {
+      _inherent = value;
+      notifyListeners();
+    }
   }
+
+  double _scale = 1.0;
+  double get scale => _scale;
+  set scale(double value) {
+    value = value.clamp(0.1, 100);
+    if (value != _scale) {
+      _scale = value;
+      notifyListeners();
+    }
+  }
+
+  Offset convert(Offset local) => (local - offset - inherent) / scale;
+}
+
+class ScaleController extends ChangeNotifier {
+  _ScaleValue? __value;
+
+  _ScaleValue get _value => __value ?? _ScaleValue();
+
+  Offset get offset => _value.offset;
+  set offset(Offset v) => _value.offset = v;
+
+  Offset get inherent => _value.inherent;
+  set inherent(Offset v) => _value.inherent = v;
+
+  double get scale => _value.scale;
+  set scale(double v) => _value.scale = v;
+
+  Offset convert(Offset local) => _value.convert(local);
+
+  void attach(_ScaleValue value) {
+    __value = value;
+    value.addListener(notifyListeners);
+  }
+
+  void detach() {
+    __value?.removeListener(notifyListeners);
+    __value = null;
+  }
+
+  static ScaleController of(BuildContext context, {bool listen = true}) =>
+      Provider.of<ScaleController>(context, listen: listen);
 }
