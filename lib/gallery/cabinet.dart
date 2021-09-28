@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:whanno_flutter/gallery/gallery.dart';
 import 'package:whanno_flutter/utils/my_card.dart';
-import 'package:whanno_flutter/utils/net_image.dart';
+import 'package:whanno_flutter/utils/indicator_image.dart';
 
 extension on double {
   double get upToZero => this <= 0.0 ? 0.0 : this;
@@ -74,7 +74,7 @@ class Cabinet extends StatelessWidget {
                     right: (padding.right - highlightExpansion.when(highlight)).upToZero,
                     bottom: index == gallery.imageUrls.length ? padding.bottom : 0,
                   ),
-            child: NetImage(url: gallery.imageUrls[index]),
+            child: IndicatorImage(NetworkImage(gallery.imageUrls[index])),
           ),
         );
       },

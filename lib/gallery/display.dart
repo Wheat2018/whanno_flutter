@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:whanno_flutter/utils/draggableField.dart';
 import 'package:whanno_flutter/utils/my_card.dart';
-import 'package:whanno_flutter/utils/net_image.dart';
+import 'package:whanno_flutter/utils/indicator_image.dart';
 
 import 'gallery.dart';
 
@@ -19,7 +19,7 @@ class Display extends StatelessWidget {
         return MyCard.cupertino(
           margin: margin,
           child: Stack(
-            children: [listen(NetImage(url: GalleryModel.of(context).current))],
+            children: [listen(IndicatorImage(NetworkImage(GalleryModel.of(context).current)))],
           ),
         );
       },
