@@ -23,9 +23,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  english_words: ^4.0.0
-  transparent_image: ^2.0.0
   provider: ^5.0.0
+  fullscreen: 
 
 
   # The following adds the Cupertino Icons font to your application.

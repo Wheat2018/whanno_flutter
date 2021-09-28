@@ -1,3 +1,7 @@
+import 'package:whanno_flutter/utils/fullscreen.dart'
+    if (dart.library.html) 'package:whanno_flutter/utils/fullscreen_web.dart' as fullscreen;
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:whanno_flutter/gallery/cabinet.dart';
@@ -80,34 +84,38 @@ class _MyAppState extends State<MyApp> {
       title: 'wheat',
       theme: ThemeData.dark().copyWith(shadowColor: Colors.black54, platform: TargetPlatform.iOS),
       routes: {
-        '/home': (context) => Scaffold(
-              appBar: AppBar(
-                leading: IconButton(
-                    onPressed: () {
-                      setState(() {
-                        cabinetLayoutStyle = cabinetLayoutStyle == CabinetLayoutStyle.fixed
-                            ? CabinetLayoutStyle.floating
-                            : CabinetLayoutStyle.fixed;
-                      });
-                    },
-                    icon: Icon(Icons.transform)),
-                title: Consumer<ScaleController>(
-                  builder: (context, controller, child) =>
-                      Text("${controller.scale}, ${controller.size}, ${controller.offset}"),
+        '/home': (_) => LayoutBuilder(builder: (context, constraint) {
+              return Scaffold(
+                appBar: AppBar(
+                  toolbarHeight: (constraint.maxHeight / 10).clamp(0, 50),
+                  leading: IconButton(
+                      onPressed: () {
+                        setState(() {
+                          cabinetLayoutStyle = cabinetLayoutStyle == CabinetLayoutStyle.fixed
+                              ? CabinetLayoutStyle.floating
+                              : CabinetLayoutStyle.fixed;
+                        });
+                      },
+                      icon: Icon(Icons.transform)),
+                  title: Consumer<ScaleController>(
+                    builder: (context, controller, child) =>
+                        Text("${controller.scale}, ${controller.size}, ${controller.offset}"),
+                  ),
+                  actions: [fullscreen.fullscreenButton()],
                 ),
-              ),
-              body: OrientationBuilder(
-                builder: (context, orientation) {
-                  return Center(
-                    child: Flex(
-                      direction: orientation == Orientation.portrait ? Axis.vertical : Axis.horizontal,
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: getChildren(context, orientation),
-                    ),
-                  );
-                },
-              ),
-            )
+                body: OrientationBuilder(
+                  builder: (context, orientation) {
+                    return Center(
+                      child: Flex(
+                        direction: orientation == Orientation.portrait ? Axis.vertical : Axis.horizontal,
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: getChildren(context, orientation),
+                      ),
+                    );
+                  },
+                ),
+              );
+            })
       },
       initialRoute: '/home',
     );
