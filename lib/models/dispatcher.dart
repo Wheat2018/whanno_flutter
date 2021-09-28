@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 import 'package:whanno_flutter/models/viewer.dart';
 import 'package:whanno_flutter/utils/extension_utils.dart';
@@ -49,7 +51,7 @@ abstract class TokenViewer<T> with Getter<T>, Setter<T>, Viewer<T> implements To
 ///
 /// 提示：使用索引器访问和修改颗粒，可以完美避免注意事项二。（在构建级联分发器或是某些只依赖颗粒观察器的场景，
 /// 无法直接取得分发器，亦即无法使用分发器索引器，则需要考虑注意事项二）
-abstract class Dispatcher<Granule> extends CacheGetter<List<Viewer<Granule>>> {
+abstract class Dispatcher<Granule> extends CacheGetter<List<Viewer<Granule>>> with IterableMixin<Granule?> {
   Viewer get source;
 
   /// 重新分发颗粒。调用`get()`以获得颗粒。
@@ -66,9 +68,7 @@ abstract class Dispatcher<Granule> extends CacheGetter<List<Viewer<Granule>>> {
   Granule? operator [](int i) => get()?[i].get();
   void operator []=(int i, Granule? data) => get()?[i].set(data);
   int get length => get()?.length ?? 0;
-  Iterable<Granule?> get iterator sync* {
-    for (int i = 0; i < length; i++) yield this[i];
-  }
+  Iterator<Granule?> get iterator => get()?.map((e) => e.get()).iterator ?? Iterable<Granule?>.empty().iterator;
 }
 
 /// 对分发器的源数据的类型进行强约束。对于每个分发器实现来说，这个接口是可选实现的。
@@ -140,13 +140,13 @@ class ListDispatcher<E> extends TokenDispatcher<E> implements SourceManager<List
     var list = _list = source.get();
     if (list == null) return null;
     _modified = false;
-    return List.generate(list.length, _genIndexViwer);
+    return List.generate(list.length, _genIndexViewer);
   }
 
   @override
   List<E>? rebuildSource() => (this.._modified = false)._list;
 
-  TokenViewer<E> _genIndexViwer(int i) {
+  TokenViewer<E> _genIndexViewer(int i) {
     return SimpleTokenViewer<E>(
         owner: this,
         getter: () => _list?[i],
@@ -162,7 +162,7 @@ class ListDispatcher<E> extends TokenDispatcher<E> implements SourceManager<List
     var list = _list, out = get();
     if (list == null || out == null) return null;
     list.add(data);
-    var viewer = _genIndexViwer(list.length - 1);
+    var viewer = _genIndexViewer(list.length - 1);
     out.add(viewer);
     _modified = true;
     return viewer;

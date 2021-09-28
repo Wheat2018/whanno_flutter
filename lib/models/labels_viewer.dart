@@ -1,5 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:whanno_flutter/models/common_viewer.dart';
 import 'package:whanno_flutter/models/dispatcher.dart';
+import 'package:whanno_flutter/models/instance_paint.dart';
 import 'package:whanno_flutter/models/viewer.dart';
 import 'package:whanno_flutter/utils/extension_utils.dart';
 
@@ -53,13 +55,21 @@ class CascadeStringDispatcher<Dst extends Dispatcher> extends CascadeDispatcher<
   }
 }
 
-class ImageLabelDispatcher extends CascadeStringDispatcher<StringDispatcher> {
+class InstanceLabelDispatcher extends StringDispatcher {
+  InstanceLabelDispatcher({required Viewer<String> source, required Pattern pattern})
+      : super(source: source, pattern: pattern);
+  InstancePaint paint = InstancePaint.defaultPaint;
+  void draw(Canvas canvas, Size size, Paint paint) => this.paint.draw(canvas, size, paint, this);
+}
+
+class ImageLabelDispatcher extends CascadeStringDispatcher<InstanceLabelDispatcher> {
   final Viewer<String> imageLabel;
   final Pattern instancePattern;
   final Pattern elementPattern;
   ImageLabelDispatcher({required this.imageLabel, required this.elementPattern, required this.instancePattern})
       : super(
-            source: ValueViewer(imageLabel.dispatcher(instancePattern)), builder: (v) => v.dispatcher(elementPattern));
+            source: ValueViewer(imageLabel.dispatcher(instancePattern)),
+            builder: (v) => InstanceLabelDispatcher(source: v, pattern: elementPattern));
 
   /// 所属标注文件（若有）的uri。
   String? get uri => owner.label is TextViewer ? owner.label.uri : null;
@@ -82,8 +92,8 @@ class LabelDispatcher extends CascadeStringDispatcher<ImageLabelDispatcher> {
 LabelDispatcher singleLablesTextViewerTest() {
   var str = """
 00001.jpg 2
-1 2 3 4 5
-5 4 3 2 1
+10 20 30 40 5
+50 40 30 20 1
 00002.jpg 1
 2 1 3 5 6
 00003.jpg 0

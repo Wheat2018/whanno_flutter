@@ -19,7 +19,7 @@ class GalleryModel extends ChangeNotifier {
         it2 = Iterable.generate(labels.get()?.length ?? 0).iterator;
     _signedImages = mapping(
         images: images.get()!,
-        labels: labels.iterator.skipNull(),
+        labels: labels.skipNull(),
         imageKey: (_) => (it1..moveNext()).current.toString(),
         labelKey: (_, __) => (it2..moveNext()).current.toString());
   }
@@ -30,18 +30,6 @@ class GalleryModel extends ChangeNotifier {
       UnmodifiableListView(_signedImages.values.map((e) => e.image?.uri).skipNull());
   int get index => _index;
   String get current => imageUrls[index];
-
-  // void add(String url) {
-  //   _imageUrls.add(url);
-  //   notifyListeners();
-  // }
-
-  // void remove(int index) {
-  //   if (index >= 0 && index < imageUrls.length) {
-  //     _imageUrls.removeAt(index);
-  //     notifyListeners();
-  //   }
-  // }
 
   void select(int index) {
     if (index >= 0 && index < imageUrls.length) {
