@@ -2,25 +2,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class _DelegateTest extends SingleChildLayoutDelegate {
-  @override
-  bool shouldRelayout(covariant SingleChildLayoutDelegate oldDelegate) => true;
-
-  @override
-  BoxConstraints getConstraintsForChild(BoxConstraints constraints) {
-    var s = super.getConstraintsForChild(constraints);
-    print("getConstraintsForChild: $constraints, $s");
-    return BoxConstraints.loose(Size(double.infinity, double.infinity));
-  }
-
-  @override
-  Size getSize(BoxConstraints constraints) {
-    var s = super.getSize(constraints);
-    print("getSize: $constraints, $s");
-    return s;
-  }
-}
-
 class DraggableField extends StatefulWidget {
   ///第二个参数为监听控件
   final Widget Function(BuildContext context, Widget Function(Widget) apply) builder;
@@ -76,30 +57,30 @@ class _DraggableFieldState extends State<DraggableField> {
   @override
   Widget build(BuildContext context) {
     var down = Offset.zero;
-    var downOffset = Offset.zero;
     var downScale = 1.0;
-    var normal = Offset.zero;
+    Offset? normal;
     return ChangeNotifierProvider(
       create: (_) => value,
       child: Listener(
         onPointerSignal: (e) {
           if (e is PointerScrollEvent) {
-            var oldScale = value.scale;
-            var normal = value.convert(e.position);
-            value.scale *= 1 - e.scrollDelta.dy.clamp(-50, 50) / 50;
-            value.offset += normal * (oldScale - value.scale);
+            var scale = 1 - e.scrollDelta.dy.clamp(-50, 50) / 50;
+            value.zoom(normal ?? value.globalToNormal(e.position), value.scale * scale);
           }
         },
         child: GestureDetector(
           onScaleStart: (details) {
-            downOffset = value.offset;
             down = details.focalPoint;
-            normal = value.convert(down);
+            normal = value.globalToNormal(down);
             downScale = value.scale;
           },
           onScaleUpdate: (details) {
-            value.scale = downScale * details.scale;
-            value.offset = downOffset + details.focalPoint - down + normal * (downScale - value.scale);
+            value.translate(details.focalPoint - down);
+            if (details.scale != 1.0) value.zoom(normal!, downScale * details.scale);
+            down = details.focalPoint;
+          },
+          onScaleEnd: (details) {
+            normal = null;
           },
           child: Container(
               width: double.infinity,
@@ -132,15 +113,23 @@ class _ScaleValue extends ChangeNotifier {
     }
   }
 
+  void translate(Offset offset) => this.offset += offset;
+
+  void zoom(Offset normal, double newScale) {
+    var oldScale = scale;
+    scale = newScale;
+    offset += normal * (oldScale - scale);
+  }
+
   BuildContext? childContext;
 
   RenderBox? get _box => childContext?.findRenderObject() as RenderBox?;
 
   Offset globalToLocal(Offset global) => _box?.globalToLocal(global) ?? global;
 
-  Offset localToGlobal(Offset local) => _box?.globalToLocal(local) ?? local;
+  Offset globalToNormal(Offset global) => (globalToLocal(global) - offset) / scale;
 
-  Offset convert(Offset global) => (globalToLocal(global) - offset) / scale;
+  Offset localToGlobal(Offset local) => _box?.localToGlobal(local) ?? local;
 
   Size get size => (_box?.size ?? Size.zero) * scale;
 }
@@ -158,7 +147,7 @@ class ScaleController extends ChangeNotifier {
 
   Size get size => _value.size;
 
-  Offset convert(Offset global) => _value.convert(global);
+  Offset globalToNormal(Offset global) => _value.globalToNormal(global);
   Offset globalToLocal(Offset global) => _value.globalToLocal(global);
   Offset localToGlobal(Offset local) => _value.localToGlobal(local);
 
