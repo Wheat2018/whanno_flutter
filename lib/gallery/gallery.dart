@@ -26,10 +26,9 @@ class GalleryModel extends ChangeNotifier {
   late Map<String, SignedImage> _signedImages;
   int _index = 0;
 
-  UnmodifiableListView<String> get imageUrls =>
-      UnmodifiableListView(_signedImages.values.map((e) => e.image?.uri).skipNull());
+  UnmodifiableListView<SignedImage> get imageUrls => UnmodifiableListView(_signedImages.values);
   int get index => _index;
-  String get current => imageUrls[index];
+  SignedImage get current => imageUrls[index];
 
   void select(int index) {
     if (index >= 0 && index < imageUrls.length) {

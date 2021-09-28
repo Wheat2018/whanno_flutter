@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:whanno_flutter/gallery/gallery.dart';
 import 'package:whanno_flutter/utils/my_card.dart';
 import 'package:whanno_flutter/utils/indicator_image.dart';
+import 'package:whanno_flutter/utils/extension_utils.dart';
 
 extension on double {
   double get upToZero => this <= 0.0 ? 0.0 : this;
@@ -41,44 +43,46 @@ class Cabinet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var gallery = GalleryModel.of(context);
-    var theme = Theme.of(context);
-    return ListView.builder(
-      clipBehavior: clipBehavior,
-      shrinkWrap: shrinkWrap,
-      controller: controller,
-      scrollDirection: scrollDirection,
-      itemCount: gallery.imageUrls.length,
-      itemBuilder: (context, index) {
-        bool highlight = index == gallery.index;
-        return GestureDetector(
-          onTap: () => gallery.select(index),
-          child: MyCard(
-            clipBehavior: Clip.antiAlias,
-            color: highlight ? theme.primaryColorLight : theme.primaryColor,
-            border: Border.all(color: highlight ? theme.highlightColor : theme.dividerColor, width: 1.0),
-            borderOnForeground: true,
-            padding: EdgeInsets.symmetric(vertical: verticalCardPadding, horizontal: horizontalCardPadding),
-            elevation: highlight ? highlightElevation : elevation,
-            radius: BorderRadius.all(Radius.circular(cardRadius)),
-            margin: scrollDirection == Axis.horizontal
-                ? EdgeInsets.only(
-                    left: index == 0 ? padding.left : cardMargin,
-                    top: (padding.top - highlightExpansion.when(highlight)).upToZero,
-                    bottom: (padding.bottom - highlightExpansion.when(highlight)).upToZero,
-                    right: index == gallery.imageUrls.length ? padding.right : 0,
-                  )
-                : EdgeInsets.only(
-                    top: index == 0 ? padding.top : cardMargin,
-                    left: (padding.left - highlightExpansion.when(highlight)).upToZero,
-                    right: (padding.right - highlightExpansion.when(highlight)).upToZero,
-                    bottom: index == gallery.imageUrls.length ? padding.bottom : 0,
-                  ),
-            child: IndicatorImage(NetworkImage(gallery.imageUrls[index])),
-          ),
-        );
-      },
-    );
+    return Consumer<GalleryModel>(builder: (context, gallery, child) {
+      return ListView.builder(
+        clipBehavior: clipBehavior,
+        shrinkWrap: shrinkWrap,
+        controller: controller,
+        scrollDirection: scrollDirection,
+        itemCount: gallery.imageUrls.length,
+        itemBuilder: (context, index) {
+          var theme = Theme.of(context);
+          bool highlight = index == gallery.index;
+          return GestureDetector(
+            onTap: () => gallery.select(index),
+            child: MyCard(
+              clipBehavior: Clip.antiAlias,
+              color: highlight ? theme.primaryColorLight : theme.primaryColor,
+              border: Border.all(color: highlight ? theme.highlightColor : theme.dividerColor, width: 1.0),
+              borderOnForeground: true,
+              padding: EdgeInsets.symmetric(vertical: verticalCardPadding, horizontal: horizontalCardPadding),
+              elevation: highlight ? highlightElevation : elevation,
+              radius: BorderRadius.all(Radius.circular(cardRadius)),
+              margin: scrollDirection == Axis.horizontal
+                  ? EdgeInsets.only(
+                      left: index == 0 ? padding.left : cardMargin,
+                      top: (padding.top - highlightExpansion.when(highlight)).upToZero,
+                      bottom: (padding.bottom - highlightExpansion.when(highlight)).upToZero,
+                      right: index == gallery.imageUrls.length ? padding.right : 0,
+                    )
+                  : EdgeInsets.only(
+                      top: index == 0 ? padding.top : cardMargin,
+                      left: (padding.left - highlightExpansion.when(highlight)).upToZero,
+                      right: (padding.right - highlightExpansion.when(highlight)).upToZero,
+                      bottom: index == gallery.imageUrls.length ? padding.bottom : 0,
+                    ),
+              child: (gallery.imageUrls[index].image?.get())
+                  .on(notNull: (v) => IndicatorImage(v), justNull: () => Icon(Icons.error)),
+            ),
+          );
+        },
+      );
+    });
   }
 }
 

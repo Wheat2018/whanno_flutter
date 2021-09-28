@@ -1,15 +1,15 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:whanno_flutter/gallery/cabinet.dart';
 import 'package:whanno_flutter/gallery/display.dart';
 import 'package:whanno_flutter/gallery/gallery.dart';
+import 'package:whanno_flutter/utils/draggableField.dart';
 
 void main() {
   runApp(MultiProvider(
     providers: [
       ChangeNotifierProvider(create: (context) => GalleryModel()),
+      ChangeNotifierProvider(create: (context) => ScaleController())
     ],
     child: MyApp(),
   ));
@@ -91,7 +91,10 @@ class _MyAppState extends State<MyApp> {
                       });
                     },
                     icon: Icon(Icons.transform)),
-                title: Text('wheat home'),
+                title: Consumer<ScaleController>(
+                  builder: (context, controller, child) =>
+                      Text("${controller.scale}, ${controller.size}, ${controller.offset}"),
+                ),
               ),
               body: OrientationBuilder(
                 builder: (context, orientation) {
