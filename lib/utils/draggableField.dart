@@ -2,6 +2,25 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+class _DelegateTest extends SingleChildLayoutDelegate {
+  @override
+  bool shouldRelayout(covariant SingleChildLayoutDelegate oldDelegate) => true;
+
+  @override
+  BoxConstraints getConstraintsForChild(BoxConstraints constraints) {
+    var s = super.getConstraintsForChild(constraints);
+    print("getConstraintsForChild: $constraints, $s");
+    return BoxConstraints.loose(Size(double.infinity, double.infinity));
+  }
+
+  @override
+  Size getSize(BoxConstraints constraints) {
+    var s = super.getSize(constraints);
+    print("getSize: $constraints, $s");
+    return s;
+  }
+}
+
 class DraggableField extends StatefulWidget {
   ///第二个参数为监听控件
   final Widget Function(BuildContext context, Widget Function(Widget) apply) builder;
@@ -27,17 +46,21 @@ class _DraggableFieldState extends State<DraggableField> {
   }
 
   Widget _dragListener(Widget child) {
-    return Consumer<_ScaleValue>(
-      builder: (context, controller, child) {
-        return Transform.translate(
-            offset: controller.inherent + controller.offset,
-            child: Transform.scale(
-              scale: controller.scale,
-              child: child,
-              alignment: Alignment.topLeft,
-            ));
-      },
-      child: child,
+    return Align(
+      alignment: widget.alignment,
+      child: Consumer<_ScaleValue>(
+        builder: (context, value, child) {
+          value.childContext = context;
+          return Transform.translate(
+              offset: value.offset,
+              child: Transform.scale(
+                scale: value.scale,
+                child: child,
+                alignment: Alignment.topLeft,
+              ));
+        },
+        child: child,
+      ),
     );
   }
 
@@ -62,22 +85,21 @@ class _DraggableFieldState extends State<DraggableField> {
         onPointerSignal: (e) {
           if (e is PointerScrollEvent) {
             var oldScale = value.scale;
-            var normal = value.convert(e.localPosition);
-            var wheelScale = -e.scrollDelta.dy.clamp(-50, 50) / 50;
-            value.scale *= 1 + wheelScale;
+            var normal = value.convert(e.position);
+            value.scale *= 1 - e.scrollDelta.dy.clamp(-50, 50) / 50;
             value.offset += normal * (oldScale - value.scale);
           }
         },
         child: GestureDetector(
           onScaleStart: (details) {
             downOffset = value.offset;
-            down = details.localFocalPoint;
+            down = details.focalPoint;
             normal = value.convert(down);
             downScale = value.scale;
           },
           onScaleUpdate: (details) {
             value.scale = downScale * details.scale;
-            value.offset = downOffset + details.localFocalPoint - down + normal * (downScale - value.scale);
+            value.offset = downOffset + details.focalPoint - down + normal * (downScale - value.scale);
           },
           child: Container(
               width: double.infinity,
@@ -100,15 +122,6 @@ class _ScaleValue extends ChangeNotifier {
     }
   }
 
-  Offset _inherent = Offset.zero;
-  Offset get inherent => _inherent;
-  set inherent(Offset value) {
-    if (value != _inherent) {
-      _inherent = value;
-      notifyListeners();
-    }
-  }
-
   double _scale = 1.0;
   double get scale => _scale;
   set scale(double value) {
@@ -119,7 +132,17 @@ class _ScaleValue extends ChangeNotifier {
     }
   }
 
-  Offset convert(Offset local) => (local - offset - inherent) / scale;
+  BuildContext? childContext;
+
+  RenderBox? get _box => childContext?.findRenderObject() as RenderBox?;
+
+  Offset globalToLocal(Offset global) => _box?.globalToLocal(global) ?? global;
+
+  Offset localToGlobal(Offset local) => _box?.globalToLocal(local) ?? local;
+
+  Offset convert(Offset global) => (globalToLocal(global) - offset) / scale;
+
+  Size get size => (_box?.size ?? Size.zero) * scale;
 }
 
 class ScaleController extends ChangeNotifier {
@@ -130,13 +153,14 @@ class ScaleController extends ChangeNotifier {
   Offset get offset => _value.offset;
   set offset(Offset v) => _value.offset = v;
 
-  Offset get inherent => _value.inherent;
-  set inherent(Offset v) => _value.inherent = v;
-
   double get scale => _value.scale;
   set scale(double v) => _value.scale = v;
 
-  Offset convert(Offset local) => _value.convert(local);
+  Size get size => _value.size;
+
+  Offset convert(Offset global) => _value.convert(global);
+  Offset globalToLocal(Offset global) => _value.globalToLocal(global);
+  Offset localToGlobal(Offset local) => _value.localToGlobal(local);
 
   void attach(_ScaleValue value) {
     __value = value;
