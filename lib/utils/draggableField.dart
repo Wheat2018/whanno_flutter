@@ -3,16 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class DraggableField extends StatefulWidget {
-  ///第二个参数为监听控件
-  final Widget Function(BuildContext context, Widget Function(Widget) apply) builder;
+  final Widget Function(BuildContext context, Widget Function(Widget child) apply) builder;
 
   final Alignment alignment;
-
-  DraggableField({Key? key, required this.builder, this.alignment = Alignment.center, ScaleController? controller})
-      : controller = controller ?? ScaleController(),
-        super(key: key);
-
   final ScaleController controller;
+  final HitTestBehavior? behavior;
+
+  DraggableField({
+    Key? key,
+    required this.builder,
+    this.alignment = Alignment.center,
+    ScaleController? controller,
+    this.behavior = HitTestBehavior.translucent,
+  })  : controller = controller ?? ScaleController(),
+        super(key: key);
 
   @override
   _DraggableFieldState createState() => _DraggableFieldState();
@@ -64,11 +68,13 @@ class _DraggableFieldState extends State<DraggableField> {
       child: Listener(
         onPointerSignal: (e) {
           if (e is PointerScrollEvent) {
-            var scale = 1 - e.scrollDelta.dy.clamp(-50, 50) / 50;
+            var scale = e.scrollDelta.dy.clamp(-50, 50) / 50;
+            scale = scale <= 0 ? 1 - scale : 1 / (1 + scale);
             value.zoom(normal ?? value.globalToNormal(e.position), value.scale * scale);
           }
         },
         child: GestureDetector(
+          behavior: widget.behavior,
           onScaleStart: (details) {
             down = details.focalPoint;
             normal = value.globalToNormal(down);
@@ -82,11 +88,7 @@ class _DraggableFieldState extends State<DraggableField> {
           onScaleEnd: (details) {
             normal = null;
           },
-          child: Container(
-              width: double.infinity,
-              height: double.infinity,
-              color: Colors.transparent,
-              child: widget.builder(context, _dragListener)),
+          child: widget.builder(context, _dragListener),
         ),
       ),
     );
