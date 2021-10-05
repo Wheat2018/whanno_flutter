@@ -7,7 +7,12 @@ class DraggableField extends StatefulWidget {
 
   final Alignment alignment;
   final ScaleController controller;
-  final HitTestBehavior? behavior;
+  final HitTestBehavior behavior;
+
+  final bool Function(ScaleController controller, Offset translate)? onTranslate;
+  final bool Function(ScaleController controller, Offset normal, double newScale)? onZoom;
+  final void Function(ScaleController controller)? didTranslate;
+  final void Function(ScaleController controller, Offset normal)? didZoom;
 
   DraggableField({
     Key? key,
@@ -15,6 +20,10 @@ class DraggableField extends StatefulWidget {
     this.alignment = Alignment.center,
     ScaleController? controller,
     this.behavior = HitTestBehavior.translucent,
+    this.onTranslate,
+    this.onZoom,
+    this.didTranslate,
+    this.didZoom,
   })  : controller = controller ?? ScaleController(),
         super(key: key);
 
@@ -58,6 +67,16 @@ class _DraggableFieldState extends State<DraggableField> {
     super.didUpdateWidget(oldWidget);
   }
 
+  void doTranslate(Offset offset) {
+    if (widget.onTranslate?.call(widget.controller, offset) ?? true) value.translate(offset);
+    widget.didTranslate?.call(widget.controller);
+  }
+
+  void doZoom(Offset normal, double newScale) {
+    if (widget.onZoom?.call(widget.controller, normal, newScale) ?? true) value.zoom(normal, newScale);
+    widget.didZoom?.call(widget.controller, normal);
+  }
+
   @override
   Widget build(BuildContext context) {
     var down = Offset.zero;
@@ -66,11 +85,12 @@ class _DraggableFieldState extends State<DraggableField> {
     return ChangeNotifierProvider(
       create: (_) => value,
       child: Listener(
+        behavior: widget.behavior,
         onPointerSignal: (e) {
           if (e is PointerScrollEvent) {
             var scale = e.scrollDelta.dy.clamp(-50, 50) / 50;
             scale = scale <= 0 ? 1 - scale : 1 / (1 + scale);
-            value.zoom(normal ?? value.globalToNormal(e.position), value.scale * scale);
+            doZoom(normal ?? value.globalToNormal(e.position), value.scale * scale);
           }
         },
         child: GestureDetector(
@@ -81,8 +101,8 @@ class _DraggableFieldState extends State<DraggableField> {
             downScale = value.scale;
           },
           onScaleUpdate: (details) {
-            value.translate(details.focalPoint - down);
-            if (details.scale != 1.0) value.zoom(normal!, downScale * details.scale);
+            doTranslate(details.focalPoint - down);
+            if (details.scale != 1.0) doZoom(normal!, downScale * details.scale);
             down = details.focalPoint;
           },
           onScaleEnd: (details) {
