@@ -9,32 +9,13 @@ extension NotNull<T> on T? {
 }
 
 extension StringUtils on String {
-  Iterable<String> separate(Iterable<int>? separator) sync* {
-    int start = 0;
-    if (separator != null) {
-      for (var sep in separator) {
-        if (sep < start)
-          yield "";
-        else {
-          yield substring(start, sep);
-          start = sep;
-        }
-      }
-    }
-    yield substring(start);
-  }
-
-  String join(Iterable<String> strings) {
-    if (strings.isEmpty) return this;
-    var buffer = StringBuffer(this);
-    strings.forEach(buffer.write);
-    return buffer.toString();
-  }
+  String get filename => RegExp(r"(.*[\\/])*([^.]+).*").firstMatch(this)?.group(2) ?? "";
 }
 
 extension IterableUtils<T> on Iterable<T?> {
   Iterable<T> skipNull() => whereType<T>();
   bool get hasNull => whereType<Null>().isNotEmpty;
+  static Iterable<int> get growing => Iterable.generate(1 << 62);
 }
 
 extension ImageProviderUtils on ImageProvider {

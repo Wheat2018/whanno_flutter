@@ -23,7 +23,7 @@ class CascadeStringDispatcher<Dst extends Dispatcher> extends CascadeDispatcher<
   @override
   Dispatcher<String>? rebuildSource() {
     get()?.getRange(length - appendCount, length).forEach((e) => e.get()?.flash());
-    _appendDispatcher?.source.get().on(notNull: (v) => source.get()?.tail = "".join(v));
+    _appendDispatcher?.source.get().on(notNull: (v) => source.get()?.tail = v.join());
     source.get()?.flash();
     return super.rebuildSource();
   }
@@ -89,7 +89,7 @@ class LabelDispatcher extends CascadeStringDispatcher<ImageLabelDispatcher> {
                 ImageLabelDispatcher(imageLabel: v, elementPattern: elementPattern, instancePattern: instancePattern));
 }
 
-LabelDispatcher singleLablesTextViewerTest() {
+LabelDispatcher singleLabelsTextViewerTest() {
   var str = """
 00001.jpg 2
 10 20 30 40 5

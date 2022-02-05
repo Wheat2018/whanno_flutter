@@ -58,7 +58,7 @@ class MyCard extends StatelessWidget {
     this.border,
     this.radius = const BorderRadius.all(Radius.circular(10.0)),
     this.margin = const EdgeInsets.all(10),
-    this.clipBehavior = Clip.hardEdge,
+    this.clipBehavior = Clip.antiAlias,
     this.color,
     this.glassBlur = 5.0,
     this.glassOpacity = 0.0,

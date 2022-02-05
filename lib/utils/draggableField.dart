@@ -40,21 +40,20 @@ class _DraggableFieldState extends State<DraggableField> {
   }
 
   Widget _dragListener(Widget child) {
-    return Align(
-      alignment: widget.alignment,
-      child: Consumer<_ScaleValue>(
-        builder: (context, value, child) {
-          value.childContext = context;
-          return Transform.translate(
-              offset: value.offset,
-              child: Transform.scale(
-                scale: value.scale,
-                child: child,
-                alignment: Alignment.topLeft,
-              ));
-        },
-        child: child,
-      ),
+    return Consumer<_ScaleValue>(
+      builder: (context, value, child) {
+        value.childContext = context;
+        return Align(
+            alignment: widget.alignment,
+            child: Transform.translate(
+                offset: value.offset,
+                child: Transform.scale(
+                  scale: value.scale,
+                  child: child,
+                  alignment: Alignment.topLeft,
+                )));
+      },
+      child: child,
     );
   }
 
@@ -181,6 +180,12 @@ class ScaleController extends ChangeNotifier {
   void detach() {
     __value?.removeListener(notifyListeners);
     __value = null;
+  }
+
+  @override
+  void dispose() {
+    detach();
+    super.dispose();
   }
 
   static ScaleController of(BuildContext context, {bool listen = true}) =>

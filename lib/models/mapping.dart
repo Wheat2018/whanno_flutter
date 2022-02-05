@@ -1,5 +1,6 @@
 import 'package:whanno_flutter/models/common_viewer.dart';
 import 'package:whanno_flutter/models/labels_viewer.dart';
+import 'package:whanno_flutter/utils/extension_utils.dart';
 
 class SignedImage {
   final String key;
@@ -19,15 +20,19 @@ class SignedImage {
   String toString() => super.toString() + "{${valid ? "valid" : "invalid"}, $image, $label}";
 }
 
-String matchFilename(String path) => RegExp(r"(.*[\\/])*([^.]+).*").firstMatch(path)?.group(2) ?? "";
-
 Map<String, SignedImage> mapping(
     {required Iterable<ImageGetter> images,
     required Iterable<ImageLabelDispatcher> labels,
     String Function(String uri)? imageKey,
     String Function(String uri, String content)? labelKey}) {
-  imageKey = imageKey ?? matchFilename;
-  labelKey = labelKey ?? (uri, content) => uri.isNotEmpty ? matchFilename(uri) : content;
+  if (imageKey == null) {
+    var it = IterableUtils.growing.iterator;
+    imageKey = (_) => (it..moveNext()).current.toString();
+  }
+  if (labelKey == null) {
+    var it = IterableUtils.growing.iterator;
+    labelKey = (_, __) => (it..moveNext()).current.toString();
+  }
   Map<String, SignedImage> map = {};
   for (var image in images) {
     var key = imageKey(image.uri);

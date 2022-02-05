@@ -45,7 +45,7 @@ class ImageGetter extends CacheGetter<ImageProvider> {
 
   @override
   ImageProvider<Object>? performGet() {
-    return _onUri(uri, onPath: (path) => AssetImage(path), onUrl: (url) => NetworkImage(url));
+    return _onUri(uri, onPath: (path) => FileImage(File(path)), onUrl: (url) => NetworkImage(url));
   }
 }
 

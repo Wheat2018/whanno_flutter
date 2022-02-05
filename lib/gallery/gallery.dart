@@ -10,7 +10,7 @@ import 'package:whanno_flutter/utils/extension_utils.dart';
 class GalleryModel extends ChangeNotifier {
   GalleryModel() {
     var images = imagesGetterTest();
-    var labels = singleLablesTextViewerTest();
+    var labels = singleLabelsTextViewerTest();
     labels.append(init: labels[0]?.str ?? "");
     labels.append(init: labels[0]?.str ?? "");
     labels.append(init: labels[0]?.str ?? "");
