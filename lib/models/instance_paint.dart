@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:whanno_flutter/models/labels_viewer.dart';
 import 'package:whanno_flutter/utils/extension_utils.dart';
+
+import 'labels_viewer.dart';
 
 abstract class InstancePaint {
   static InstancePaint get defaultPaint => RectPaint();

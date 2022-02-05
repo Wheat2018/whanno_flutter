@@ -1,4 +1,4 @@
-import 'package:whanno_flutter/models/common_viewer.dart';
+import 'package:whanno_flutter/models/interface_impl/viewer_impl.dart';
 import 'package:whanno_flutter/models/labels_viewer.dart';
 import 'package:whanno_flutter/utils/extension_utils.dart';
 

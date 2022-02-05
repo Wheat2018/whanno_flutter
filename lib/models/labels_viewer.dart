@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:whanno_flutter/models/common_viewer.dart';
-import 'package:whanno_flutter/models/dispatcher.dart';
-import 'package:whanno_flutter/models/instance_paint.dart';
-import 'package:whanno_flutter/models/viewer.dart';
 import 'package:whanno_flutter/utils/extension_utils.dart';
+
+import 'interface_impl/dispatcher_impl.dart';
+import 'interface_impl/viewer_impl.dart';
+import 'interface/dispatcher.dart';
+import 'interface/viewer.dart';
+import 'instance_paint.dart';
 
 class CascadeStringDispatcher<Dst extends Dispatcher> extends CascadeDispatcher<Dst, String> {
   final Viewer<StringDispatcher> source;

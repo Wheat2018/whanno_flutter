@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:whanno_flutter/utils/extension_utils.dart';
 
-/// 描述可从[Getter\<T\>]实例中获取[T]类型实例的约束。
+/// 描述可从[Getter\<T\>]实例中获取[T]类型实例的约束。
 abstract class Getter<T> {
   dynamic owner;
 
@@ -17,7 +17,7 @@ abstract class Getter<T> {
   String toString() => "$runtimeType{${get()}}";
 }
 
-/// 描述可将[T]类型实例写入[Setter\<T\>]实例的约束。
+/// 描述可将[T]类型实例写入[Setter\<T\>]实例的约束。
 abstract class Setter<T> {
   dynamic owner;
 
@@ -58,27 +58,25 @@ abstract class CacheViewer<T> extends CacheGetter<T> with Setter<T>, Viewer<T> {
   void set(T? data) => data.on(notNull: _cacheThenSet, justNull: _setByCache);
 }
 
-// ----impl----
-
-class SimpleViewer<T> with Getter<T>, Setter<T>, Viewer<T> {
-  final T? Function()? getter;
-  final void Function(T data)? setter;
-  SimpleViewer({this.getter, this.setter});
-
-  @override
-  T? performGet() => getter?.call();
-
-  @override
-  void performSet(T data) => setter?.call(data);
+/// 令牌约束。
+abstract class Tokenize {
+  int get token;
 }
 
-class ValueViewer<T> extends CacheViewer<T> {
-  ValueViewer(T initValue) {
-    cache = initValue;
+/// 带令牌的观察器约束。观察器的令牌在构造时生成，每次`get`和`set`操作会检验`owner`的令牌。
+abstract class TokenViewer<T> with Getter<T>, Setter<T>, Viewer<T> implements Tokenize {
+  final int token;
+  TokenViewer({required Tokenize owner, int? token}) : token = token ?? owner.token {
+    super.owner = owner;
   }
-  @override
-  T? performGet() => cache;
+
+  /// 令牌审查失败回调。
+  static Null Function(TokenViewer)? onArrest = (v) {
+    assert(false, "TokenViewer: token block! ${v.token} != ${v.owner.token}");
+  };
 
   @override
-  void performSet(T data) => cache = data;
+  T? get() => token == owner.token ? super.get() : onArrest?.call(this);
+  @override
+  void set(data) => token == owner.token ? super.set(data) : onArrest?.call(this);
 }

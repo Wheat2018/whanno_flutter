@@ -1,5 +1,5 @@
-import 'package:whanno_flutter/models/common_viewer.dart';
-import 'package:whanno_flutter/models/viewer.dart';
+import 'package:whanno_flutter/models/interface_impl/viewer_impl.dart';
+import 'package:whanno_flutter/models/interface/viewer.dart';
 
 class ImagesGetter extends CacheGetter<Iterable<ImageGetter>> {
   final Getter<Iterable<String>> files;
